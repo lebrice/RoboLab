@@ -34,7 +34,7 @@ from robolab.core.environments.scene_fixture import FRANKA_TABLE_FIXTURE
 #   - examples/run_abs_ik_demo.py (converts eef_frame targets → base_link IK actions)
 # Kept here so all code agrees on what eef_frame is.
 EEF_OFFSET_POS: tuple[float, float, float] = (0.0, 0.0, 0.0)
-EEF_OFFSET_ROT: tuple[float, float, float, float] = (0.5, -0.5, 0.5, -0.5)
+EEF_OFFSET_ROT: tuple[float, float, float, float] = (-0.5, 0.5, -0.5, 0.5)
 
 _frame_marker_cfg = FRAME_MARKER_CFG.replace(prim_path="/Visuals/TF")
 _frame_marker_cfg.markers["frame"].scale = (0.05, 0.05, 0.05)
@@ -55,7 +55,7 @@ _WRIST_CAM = TiledCameraCfg(
         vertical_aperture=3.024,
     ),
     offset=TiledCameraCfg.OffsetCfg(
-        pos=(0.011, -0.031, -0.074), rot=(-0.420, 0.570, 0.576, -0.409), convention="opengl"
+        pos=(0.011, -0.031, -0.074), rot=(0.570, 0.576, -0.409, -0.420), convention="opengl"
     ),
 )
 
@@ -81,7 +81,7 @@ class DroidCfg:
         ),
         init_state=ArticulationCfg.InitialStateCfg(
             pos=(0, 0, 0),
-            rot=(1, 0, 0, 0),
+            rot=(0, 0, 0, 1),
             joint_pos={
                 "panda_joint1": 0.0,
                 "panda_joint2": -1 / 5 * np.pi,
@@ -218,7 +218,7 @@ def arm_joint_pos(
     joint_indices = [
         i for i, name in enumerate(robot.data.joint_names) if name in joint_names
     ]
-    joint_pos = _to_torch(robot.data.joint_pos)[:, joint_indices]
+    joint_pos = _to_torch(robot.data.joint_pos.torch)[:, joint_indices]
     return joint_pos
 
 
@@ -232,7 +232,7 @@ def gripper_pos(
     joint_indices = [
         i for i, name in enumerate(robot.data.joint_names) if name in joint_names
     ]
-    joint_pos = _to_torch(robot.data.joint_pos)[:, joint_indices]
+    joint_pos = _to_torch(robot.data.joint_pos.torch)[:, joint_indices]
 
     # rescale
     joint_pos = joint_pos / (np.pi / 4)
@@ -250,9 +250,9 @@ def ee_pos(
     body_idx = robot.data.body_names.index(ee_body_name)
     # Return position (shape: [num_envs, 3])
     pos, _ = subtract_frame_transforms(
-        _to_torch(robot.data.root_pos_w),
-        _to_torch(robot.data.root_quat_w),
-        _to_torch(robot.data.body_pos_w)[:, body_idx, :],
+        _to_torch(robot.data.root_pos_w.torch),
+        _to_torch(robot.data.root_quat_w.torch),
+        _to_torch(robot.data.body_pos_w.torch)[:, body_idx, :],
     )
     return pos
 
@@ -267,9 +267,9 @@ def ee_quat(
     body_idx = robot.data.body_names.index(ee_body_name)
     # Return quaternion (shape: [num_envs, 4])
     _, quat = subtract_frame_transforms(
-        _to_torch(robot.data.root_pos_w),
-        _to_torch(robot.data.root_quat_w),
-        q02=_to_torch(robot.data.body_quat_w)[:, body_idx, :],
+        _to_torch(robot.data.root_pos_w.torch),
+        _to_torch(robot.data.root_quat_w.torch),
+        q02=_to_torch(robot.data.body_quat_w.torch)[:, body_idx, :],
     )
     return quat
 
@@ -280,9 +280,9 @@ def eef_pos(env: ManagerBasedRLEnv, asset_cfg: SceneEntityCfg = SceneEntityCfg("
     robot = env.scene["robot"]
     idx = frames.data.target_frame_names.index("eef_frame")
     pos, _ = subtract_frame_transforms(
-        _to_torch(robot.data.root_pos_w),
-        _to_torch(robot.data.root_quat_w),
-        _to_torch(frames.data.target_pos_w)[:, idx, :],
+        _to_torch(robot.data.root_pos_w.torch),
+        _to_torch(robot.data.root_quat_w.torch),
+        _to_torch(frames.data.target_pos_w.torch)[:, idx, :],
     )
     return pos
 
@@ -293,9 +293,9 @@ def eef_quat(env: ManagerBasedRLEnv, asset_cfg: SceneEntityCfg = SceneEntityCfg(
     robot = env.scene["robot"]
     idx = frames.data.target_frame_names.index("eef_frame")
     _, quat = subtract_frame_transforms(
-        _to_torch(robot.data.root_pos_w),
-        _to_torch(robot.data.root_quat_w),
-        q02=_to_torch(frames.data.target_quat_w)[:, idx, :],
+        _to_torch(robot.data.root_pos_w.torch),
+        _to_torch(robot.data.root_quat_w.torch),
+        q02=_to_torch(frames.data.target_quat_w.torch)[:, idx, :],
     )
     return quat
 

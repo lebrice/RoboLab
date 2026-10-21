@@ -227,6 +227,8 @@ class RobolabRecorderManager(RecorderManager):
             env_ids = list(range(self._env.num_envs))
         if isinstance(env_ids, torch.Tensor):
             env_ids = env_ids.tolist()
+        elif isinstance(env_ids, slice):  # IsaacLab 3.0's reset() passes slice(None)
+            env_ids = list(range(self._env.num_envs))[env_ids]
 
         for env_id in env_ids:
             self._current_episode_index[env_id] = episode_index
@@ -252,6 +254,8 @@ class RobolabRecorderManager(RecorderManager):
 
         if isinstance(env_ids, torch.Tensor):
             env_ids = env_ids.tolist()
+        elif isinstance(env_ids, slice):  # IsaacLab 3.0's reset() passes slice(None)
+            env_ids = list(range(self._env.num_envs))[env_ids]
 
         info = {}
         if hasattr(self, "_terms"):
@@ -357,6 +361,8 @@ class RobolabRecorderManager(RecorderManager):
             env_ids = list(range(self._env.num_envs))
         if isinstance(env_ids, torch.Tensor):
             env_ids = env_ids.tolist()
+        elif isinstance(env_ids, slice):  # IsaacLab 3.0's reset() passes slice(None)
+            env_ids = list(range(self._env.num_envs))[env_ids]
 
         active_set = set(self._active_env_ids())
         env_ids = [e for e in env_ids if e in active_set]
@@ -392,6 +398,8 @@ class RobolabRecorderManager(RecorderManager):
             env_ids = list(range(self._env.num_envs))
         if isinstance(env_ids, torch.Tensor):
             env_ids = env_ids.tolist()
+        elif isinstance(env_ids, slice):  # IsaacLab 3.0's reset() passes slice(None)
+            env_ids = list(range(self._env.num_envs))[env_ids]
 
         active_set = set(self._active_env_ids())
         env_ids = [e for e in env_ids if e in active_set]
@@ -422,6 +430,8 @@ class RobolabRecorderManager(RecorderManager):
             env_ids = list(range(self._env.num_envs))
         if isinstance(env_ids, torch.Tensor):
             env_ids = env_ids.tolist()
+        elif isinstance(env_ids, slice):  # IsaacLab 3.0's reset() passes slice(None)
+            env_ids = list(range(self._env.num_envs))[env_ids]
 
         # Lazy-init HDF5 on first write
         if not self._hdf5_initialized:
@@ -501,6 +511,8 @@ class RobolabRecorderManager(RecorderManager):
             env_ids = list(range(self._env.num_envs))
         if isinstance(env_ids, torch.Tensor):
             env_ids = env_ids.tolist()
+        elif isinstance(env_ids, slice):  # IsaacLab 3.0's reset() passes slice(None)
+            env_ids = list(range(self._env.num_envs))[env_ids]
 
         # Filter to envs with a pending episode to finalize. An env with no
         # episode_index and no active streaming session has either never been
@@ -609,6 +621,8 @@ class RobolabRecorderManager(RecorderManager):
 
         if isinstance(env_ids, torch.Tensor):
             env_ids = env_ids.tolist()
+        elif isinstance(env_ids, slice):  # IsaacLab 3.0's reset() passes slice(None)
+            env_ids = list(range(self._env.num_envs))[env_ids]
 
         if hasattr(self, "_episodes"):
             for env_id in env_ids:

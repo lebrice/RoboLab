@@ -164,12 +164,12 @@ class GroundTruthStateExporter:
         robot = world.get_articulation("robot")
         body_idx = robot.data.body_names.index(self.ee_body_name)
         env_origin = self.env.scene.env_origins[env_id].cpu().numpy().astype(np.float32)
-        ee_pos = robot.data.body_pos_w[env_id, body_idx, :].cpu().numpy().astype(np.float32) - env_origin
-        ee_quat = robot.data.body_quat_w[env_id, body_idx, :].cpu().numpy().astype(np.float32)
+        ee_pos = robot.data.body_pos_w.torch[env_id, body_idx, :].cpu().numpy().astype(np.float32) - env_origin
+        ee_quat = robot.data.body_quat_w.torch[env_id, body_idx, :].cpu().numpy().astype(np.float32)
         joint_names = robot.data.joint_names
         if self.gripper_joint_name in joint_names:
             joint_idx = joint_names.index(self.gripper_joint_name)
-            joint_pos = robot.data.joint_pos[env_id, joint_idx].item()
+            joint_pos = robot.data.joint_pos.torch[env_id, joint_idx].item()
             gripper_closedness = float(joint_pos / self.gripper_joint_closed_pos)
         else:
             gripper_closedness = 0.0

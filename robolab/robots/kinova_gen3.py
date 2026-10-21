@@ -51,7 +51,7 @@ _WRIST_CAM = TiledCameraCfg(
     offset=TiledCameraCfg.OffsetCfg(
         # Kortex's simulation-camera pose expressed in the bracelet frame.
         pos=(0.0, -0.05639, -0.074575),
-        rot=(0.5, 0.5, 0.5, -0.5),
+        rot=(0.5, 0.5, -0.5, 0.5),
         convention="world",
     ),
 )
@@ -83,7 +83,7 @@ class KinovaGen3Cfg:
         ),
         init_state=ArticulationCfg.InitialStateCfg(
             pos=(0.0, 0.0, 0.0),
-            rot=(1.0, 0.0, 0.0, 0.0),
+            rot=(0.0, 0.0, 0.0, 1.0),
             joint_pos={
                 "joint_1": 0.0,
                 "joint_2": 0.26,
@@ -147,7 +147,7 @@ def arm_joint_pos(
 ):
     robot = env.scene[asset_cfg.name]
     indices = [robot.data.joint_names.index(name) for name in ARM_JOINT_NAMES]
-    return _to_torch(robot.data.joint_pos)[:, indices]
+    return _to_torch(robot.data.joint_pos.torch)[:, indices]
 
 
 def gripper_pos(
@@ -155,7 +155,7 @@ def gripper_pos(
 ):
     robot = env.scene[asset_cfg.name]
     index = robot.data.joint_names.index(GRIPPER_JOINT_NAME)
-    return _to_torch(robot.data.joint_pos)[:, index : index + 1] / 0.8
+    return _to_torch(robot.data.joint_pos.torch)[:, index : index + 1] / 0.8
 
 
 def eef_pos(
@@ -164,7 +164,7 @@ def eef_pos(
     frames = env.scene[asset_cfg.name]
     index = frames.data.target_frame_names.index("eef_frame")
     return (
-        _to_torch(frames.data.target_pos_w)[:, index, :] - env.scene.env_origins[:, :3]
+        _to_torch(frames.data.target_pos_w.torch)[:, index, :] - env.scene.env_origins[:, :3]
     )
 
 
@@ -173,7 +173,7 @@ def eef_quat(
 ):
     frames = env.scene[asset_cfg.name]
     index = frames.data.target_frame_names.index("eef_frame")
-    return _to_torch(frames.data.target_quat_w)[:, index, :]
+    return _to_torch(frames.data.target_quat_w.torch)[:, index, :]
 
 
 @configclass

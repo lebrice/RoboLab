@@ -91,8 +91,8 @@ def main():
 
     def read_eef_pose():
         return (
-            frames.data.target_pos_w[0, eef_idx, :].cpu().clone(),
-            frames.data.target_quat_w[0, eef_idx, :].cpu().clone(),
+            frames.data.target_pos_w.torch[0, eef_idx, :].cpu().clone(),
+            frames.data.target_quat_w.torch[0, eef_idx, :].cpu().clone(),
         )
 
     initial_pos, initial_quat = read_eef_pose()
@@ -166,7 +166,7 @@ def main():
             obs, _, term, trunc, _ = env.step(action)
             if verbose:
                 eef_p, eef_q = read_eef_pose()
-                joint_pos = robot.data.joint_pos[0, panda_joint_indices].cpu().tolist()
+                joint_pos = robot.data.joint_pos.torch[0, panda_joint_indices].cpu().tolist()
                 joints_str = " ".join(f"{j:+.3f}" for j in joint_pos)
                 print(
                     f"  [s{step:03d}] eef pos=({eef_p[0]:+.3f},{eef_p[1]:+.3f},{eef_p[2]:+.3f}) "

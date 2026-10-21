@@ -108,7 +108,7 @@ def ee_frame_pos(env: ManagerBasedRLEnv, ee_frame_cfg: SceneEntityCfg = SceneEnt
     ee_frame: FrameTransformer = env.scene[ee_frame_cfg.name]
     robot: Articulation = env.scene["robot"]
     ee_frame_pos, _ = subtract_frame_transforms(
-        robot.data.root_pos_w, robot.data.root_quat_w, ee_frame.data.target_pos_w[:, 0, :]
+        robot.data.root_pos_w.torch, robot.data.root_quat_w.torch, ee_frame.data.target_pos_w.torch[:, 0, :]
     )
     return ee_frame_pos
 
@@ -118,14 +118,14 @@ def ee_frame_quat(env: ManagerBasedRLEnv, ee_frame_cfg: SceneEntityCfg = SceneEn
     ee_frame: FrameTransformer = env.scene[ee_frame_cfg.name]
     robot: Articulation = env.scene["robot"]
     _, ee_frame_quat = subtract_frame_transforms(
-        robot.data.root_pos_w, robot.data.root_quat_w, q02=ee_frame.data.target_quat_w[:, 0, :]
+        robot.data.root_pos_w.torch, robot.data.root_quat_w.torch, q02=ee_frame.data.target_quat_w.torch[:, 0, :]
     )
     return ee_frame_quat
 
 
 def gripper_pos(env: ManagerBasedRLEnv, robot_cfg: SceneEntityCfg = SceneEntityCfg("robot")) -> torch.Tensor:
     robot: Articulation = env.scene[robot_cfg.name]
-    finger_joint_1 = robot.data.joint_pos[:, -1].clone().unsqueeze(1)
-    finger_joint_2 = -1 * robot.data.joint_pos[:, -2].clone().unsqueeze(1)
+    finger_joint_1 = robot.data.joint_pos.torch[:, -1].clone().unsqueeze(1)
+    finger_joint_2 = -1 * robot.data.joint_pos.torch[:, -2].clone().unsqueeze(1)
 
     return torch.cat((finger_joint_1, finger_joint_2), dim=1)

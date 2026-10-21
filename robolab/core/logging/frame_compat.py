@@ -41,5 +41,5 @@ def demo_robot_root_pose(demo_group, num_steps: int | None = None) -> tuple[np.n
         num_steps = int(demo_group["actions"].shape[0]) if "actions" in demo_group else 1
     position = np.zeros((num_steps, 3), dtype=np.float32)
     orientation = np.zeros((num_steps, 4), dtype=np.float32)
-    orientation[:, 0] = 1.0  # identity quaternion (w, x, y, z)
+    orientation[:, 3] = 1.0  # identity quaternion (x, y, z, w), IsaacLab 3.0 order
     return position, orientation

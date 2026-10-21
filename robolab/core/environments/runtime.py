@@ -51,16 +51,15 @@ def _apply_render_settings(env_cfg: ManagerBasedEnvCfg, renderer: str, rendering
     if renderer not in _RENDERER_TO_RTX_MODE:
         raise ValueError(f"Unknown renderer '{renderer}'; expected one of {list(_RENDERER_TO_RTX_MODE)}.")
 
-    if rendering_mode is not None:
-        env_cfg.sim.render.rendering_mode = rendering_mode
-
-    # Record the renderer carb setting for both modes so env_cfg.json positively
-    # logs which RTX renderer the run used. For "realtime" this matches IsaacLab's
-    # default (its WAR already enforces "RaytracedLighting"), so it is behavior-
-    # preserving; "pathtracing" is a genuine override.
-    carb_settings = dict(env_cfg.sim.render.carb_settings or {})
-    carb_settings["/rtx/rendermode"] = _RENDERER_TO_RTX_MODE[renderer]
-    env_cfg.sim.render.carb_settings = carb_settings
+    # IsaacLab 3.0 removed `sim.render` (RenderCfg) and its quality presets: RTX settings now
+    # live on each camera's `renderer_cfg` (IsaacRtxRendererCfg). The default (realtime, no
+    # preset) is IsaacLab's own default, so there is nothing to apply; the other options aren't
+    # ported yet, so fail rather than render differently.
+    if renderer != "realtime" or rendering_mode is not None:
+        raise NotImplementedError(
+            f"renderer={renderer!r} / rendering_mode={rendering_mode!r} are not ported to "
+            "IsaacLab 3.0 yet (only the default realtime renderer is)."
+        )
 
 
 def check_scene_valid(env: ManagerBasedEnv) -> bool:

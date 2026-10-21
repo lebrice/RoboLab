@@ -224,7 +224,13 @@ class RobolabDefaultEnvCfg(ManagerBasedRLEnvCfg):
         # max_{position,velocity}_iteration_count. Both name sets are listed
         # below and each assignment is guarded with hasattr so a single block
         # configures whichever PhysxCfg schema is present.
-        physx = getattr(self.sim, "physx", None)
+        # IsaacLab 3.0 moved `sim.physx` to `sim.physics` (None means a default PhysxCfg), so
+        # `sim.physx` would silently skip all of these.
+        from isaaclab_physx.physics import PhysxCfg
+
+        if self.sim.physics is None:
+            self.sim.physics = PhysxCfg()
+        physx = self.sim.physics
         physx_settings = {
             "gpu_temp_buffer_capacity": 2**30,
             "gpu_heap_capacity": 2**30,

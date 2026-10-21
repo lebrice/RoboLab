@@ -80,7 +80,7 @@ def main() -> None:
     try:
         obs, _ = env.reset()
         robot = env.scene["robot"]
-        home = robot.data.default_joint_pos[0, :7].clone()
+        home = robot.data.default_joint_pos.torch[0, :7].clone()
         print(f"Environment: {env_name}")
         print(f"Bodies: {robot.data.body_names}")
         print(f"Joints: {robot.data.joint_names}")
@@ -99,7 +99,7 @@ def main() -> None:
             obs, _, _, _, _ = env.step(action)
             if step == args_cli.num_steps // 2 - 1:
                 joint_positions = dict(
-                    zip(robot.data.joint_names, robot.data.joint_pos[0].tolist())
+                    zip(robot.data.joint_names, robot.data.joint_pos.torch[0].tolist())
                 )
                 gripper_error = max(
                     abs(joint_positions[name] - target)
@@ -117,7 +117,7 @@ def main() -> None:
             raise RuntimeError(f"Gripper coupling error is {gripper_error}")
         print(f"Maximum gripper coupling error: {gripper_error:.6f} rad")
         tracking_error = torch.max(
-            torch.abs(robot.data.joint_pos[0, :7] - arm_target)
+            torch.abs(robot.data.joint_pos.torch[0, :7] - arm_target)
         ).item()
         print(f"Final maximum arm tracking error: {tracking_error:.6f} rad")
         print(f"Saved video: {video_path}")

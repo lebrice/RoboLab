@@ -108,7 +108,7 @@ def delete_visual_axes(name: str = None, axes_parent: str = "/Visuals/Axes"):
                 stage.RemovePrim(child.GetPath())
 
 def visualize_axes(pos: torch.Tensor | np.ndarray | list,
-                   quat_wxyz: torch.Tensor | np.ndarray | list,
+                   quat_xyzw: torch.Tensor | np.ndarray | list,
                    object_name: str,
                    axis_length: float = 0.05,
                    axes_parent: str = "/Visuals/Axes"):
@@ -122,7 +122,7 @@ def visualize_axes(pos: torch.Tensor | np.ndarray | list,
 
     Args:
         pos: (3,) array-like, world position [x, y, z]
-        quat_wxyz: (4,) array-like, quaternion [w, x, y, z]
+        quat_xyzw: (4,) array-like, quaternion [x, y, z, w] (IsaacLab 3.0 order)
         object_name: str, unique name for this axes visualization
         axis_length: float, length of each axis line
     """
@@ -142,17 +142,17 @@ def visualize_axes(pos: torch.Tensor | np.ndarray | list,
     axes_prim = stage.DefinePrim(xform_path, "BasisCurves")
     curves = UsdGeom.BasisCurves(axes_prim)
 
-    def quat_wxyz_to_matrix(q):
+    def quat_xyzw_to_gf(q):
         if isinstance(q, np.ndarray):
             q = q.tolist()
         if isinstance(q, torch.Tensor):
             q = q.cpu().numpy().tolist()
-        w, x, y, z = q
+        x, y, z, w = q
         quat = Gf.Quatf(w, Gf.Vec3f(x, y, z))
         return quat
 
     # Convert quaternion to rotation matrix
-    rot = quat_wxyz_to_matrix(quat_wxyz)
+    rot = quat_xyzw_to_gf(quat_xyzw)
     if isinstance(pos, torch.Tensor):
         pos = pos.cpu().numpy().tolist()
     if isinstance(pos, np.ndarray):

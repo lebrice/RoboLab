@@ -9,7 +9,8 @@
 from pxr import Gf, Usd, UsdGeom, UsdPhysics, UsdShade
 
 try:
-    import isaacsim.core.utils.stage as stage_utils  # type: ignore
+    # IsaacLab 3.0: Isaac Lab's in-tree replacement for isaacsim.core.utils.stage.
+    import isaaclab.sim.utils.stage as stage_utils  # type: ignore
 except ImportError:  # pragma: no cover -- running outside Isaac-Sim
     stage_utils = None  # noqa: N816 – keep original style for clarity
 
@@ -331,7 +332,8 @@ def _get_usd_objects_info_cached(usd_path: str) -> tuple:
             rot = norm_mat.ExtractRotation().GetQuat()
         else:
             rot = Gf.Quatd(1, 0, 0, 0)
-        rot_quat = (rot.GetReal(), rot.GetImaginary()[0], rot.GetImaginary()[1], rot.GetImaginary()[2])
+        # (x, y, z, w), IsaacLab 3.0's order: this feeds the objects' `init_state.rot`.
+        rot_quat = (rot.GetImaginary()[0], rot.GetImaginary()[1], rot.GetImaginary()[2], rot.GetReal())
 
         object_info = {
             'name': name,

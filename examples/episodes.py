@@ -75,7 +75,7 @@ def run_gripper_toggle_episode(env, env_cfg=None, *, save_videos=True, video_mod
                 toggle_gripper = not toggle_gripper
                 print(f"[Step {count:04d}] Gripper state: {'open' if toggle_gripper else 'closed'}")
 
-            current_joint_pos = robot.data.joint_pos[0, :7]
+            current_joint_pos = robot.data.joint_pos.torch[0, :7]
             gripper_width = 0.0 if toggle_gripper else 0.785398163
             gripper_action = torch.tensor([gripper_width], device=env.device)
             actions = torch.cat([current_joint_pos, gripper_action]).unsqueeze(0)

@@ -51,7 +51,7 @@ class OverShoulderLeftCameraCfg:
             vertical_aperture=3.024,
         ),
         offset=TiledCameraCfg.OffsetCfg(
-            pos=(0.05, 0.57, 0.66), rot=(-0.393, -0.195, 0.399, 0.805), convention="opengl"
+            pos=(0.05, 0.57, 0.66), rot=(-0.195, 0.399, 0.805, -0.393), convention="opengl"
         ),
     )
 
@@ -81,7 +81,7 @@ class OverShoulderRightCameraCfg:
             vertical_aperture=3.024,
         ),
         offset=TiledCameraCfg.OffsetCfg(
-            pos=(0.05, -0.57, 0.66), rot=(0.805, 0.399, -0.195, -0.393), convention="opengl"
+            pos=(0.05, -0.57, 0.66), rot=(0.399, -0.195, -0.393, 0.805), convention="opengl"
         ),
     )
 
@@ -107,7 +107,7 @@ class HeadCameraCfg:
             vertical_aperture=3.024,
         ),
         offset=TiledCameraCfg.OffsetCfg(
-            pos=(1.5, 0.0, 1.0), rot=(0.0, 0.474, 0.0, 0.881), convention="opengl"
+            pos=(1.5, 0.0, 1.0), rot=(0.474, 0.0, 0.881, 0.0), convention="opengl"
         ),
     )
 
@@ -130,7 +130,7 @@ class EgocentricWideAngleCameraCfg:
             vertical_aperture=3.024,
         ),
         offset=TiledCameraCfg.OffsetCfg(
-            pos=(0.15, 0.0, 0.5), rot=(0.653, 0.271, -0.271, -0.653), convention="opengl"
+            pos=(0.15, 0.0, 0.5), rot=(0.271, -0.271, -0.653, 0.653), convention="opengl"
         ),
     )
 
@@ -153,7 +153,7 @@ class EgocentricMirroredWideAngleHighCameraCfg:
             vertical_aperture=3.024,
         ),
         offset=TiledCameraCfg.OffsetCfg(
-            pos=(0.9, 0, 1), rot=(0.653, 0.271, 0.271, 0.653), convention="opengl"
+            pos=(0.9, 0, 1), rot=(0.271, 0.271, 0.653, 0.653), convention="opengl"
         ),
     )
 
@@ -171,7 +171,7 @@ class EgocentricMirroredWideAngleCameraCfg:
             vertical_aperture=3.024,
         ),
         offset=TiledCameraCfg.OffsetCfg(
-            pos=(0.9, 0, 0.5), rot=(0.653, 0.271, 0.271, 0.653), convention="opengl"
+            pos=(0.9, 0, 0.5), rot=(0.271, 0.271, 0.653, 0.653), convention="opengl"
         ),
     )
 
@@ -192,7 +192,7 @@ class EgocentricMirroredCameraCfg:
     ),
     offset=TiledCameraCfg.OffsetCfg(
         pos=(1.5, 0.0, 1.0),
-        rot=(0.653, 0.271, 0.271, 0.653),
+        rot=(0.271, 0.271, 0.653, 0.653),
         convention="opengl"
     ),
 )
