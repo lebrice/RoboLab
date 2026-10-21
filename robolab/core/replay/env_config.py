@@ -60,7 +60,7 @@ def load_recorded_env_cfg(hdf5_path: str) -> tuple[dict, str] | None:
         return json.load(f), sidecar_path
 
 
-def apply_recorded_env_cfg(env_cfg, recorded: dict) -> list[str]:
+def apply_recorded_env_cfg(env_cfg, recorded: dict, quat_order: str = "xyzw") -> list[str]:
     """Overlay a recorded ``env_cfg.json`` dict onto a live env config instance.
 
     ``env_cfg`` must be a freshly built config for the same task (from
@@ -72,14 +72,33 @@ def apply_recorded_env_cfg(env_cfg, recorded: dict) -> list[str]:
     Args:
         env_cfg: The env config instance to update in place.
         recorded: The parsed ``env_cfg.json`` dict.
+        quat_order: Quaternion order of the recorded config's ``rot`` fields:
+            ``"xyzw"`` (IsaacLab 3.0) or ``"wxyz"`` (IsaacLab 2.x recordings, see
+            ``file_utils.recording_quat_order``); ``"wxyz"`` ones are reordered.
 
     Returns:
         List of skipped field namespaces with reasons (empty when the recorded
         config matched the current schema exactly).
     """
+    if quat_order == "wxyz":
+        recorded = _rots_to_xyzw(recorded)
     skipped: list[str] = []
     _overlay(env_cfg, recorded, "", skipped)
     return skipped
+
+
+def _rots_to_xyzw(data):
+    """Copy of a recorded config dict with every 4-element ``rot`` reordered (w, x, y, z) -> (x, y, z, w)."""
+    if isinstance(data, dict):
+        return {
+            key: (list(value[1:]) + [value[0]]
+                  if key == "rot" and isinstance(value, (list, tuple)) and len(value) == 4
+                  else _rots_to_xyzw(value))
+            for key, value in data.items()
+        }
+    if isinstance(data, list):
+        return [_rots_to_xyzw(item) for item in data]
+    return data
 
 
 def _string_to_slice(value: str) -> slice:
@@ -123,6 +142,12 @@ def _overlay(obj, data: dict, ns: str, skipped: list[str]) -> None:
                 skipped.append(f"{key_ns} (not in current config)")
                 continue
             target = getattr(obj, key)
+
+        # The class implementing a config is code, not a recorded value: keep the current one.
+        # (IsaacLab 3.0 moved and renamed many classes, and 2.x recorded None for extras,
+        # which 3.0 instantiates as `Asset`.)
+        if key == "class_type":
+            continue
 
         # Instructions are runtime-selected values: legacy recordings contain a
         # string and newer recordings contain the exact exposed field mapping.

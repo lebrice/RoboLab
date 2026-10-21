@@ -106,17 +106,17 @@ def add_common_eval_args(parser: argparse.ArgumentParser) -> None:
                               "the RaytracedLighting interactive renderer; 'pathtracing' "
                               "uses the offline path tracer (higher fidelity but much "
                               "slower — intended for beauty/demo renders, not large-N "
-                              "eval). Sets carb '/rtx/rendermode'."))
+                              "eval). Sets carb '/rtx/rendermode'. Only 'realtime' is "
+                              "ported to IsaacLab 3.0 so far."))
     # NOTE: named --rendering-type (not --rendering-mode) on purpose. Isaac Lab's
-    # AppLauncher.add_app_launcher_args() reserves the dest `rendering_mode` on some
-    # versions (e.g. 2.2.0 in the OSMO eval image) and raises if the parser already
-    # defines it. Using a distinct dest avoids that collision regardless of arg order.
+    # AppLauncher.add_app_launcher_args() reserved the dest `rendering_mode` on some
+    # 2.x versions (e.g. 2.2.0 in the OSMO eval image) and raised if the parser already
+    # defined it. Using a distinct dest avoids that collision regardless of arg order.
     parser.add_argument("--rendering-type", "--rendering_type", type=str, default=None,
                         choices=["performance", "balanced", "quality"],
-                        help=("Realtime renderer quality preset (maps to IsaacLab "
-                              "RenderCfg.rendering_mode). Default: unset, which lets "
-                              "IsaacLab fall back to 'balanced'. No effect under "
-                              "--renderer pathtracing."))
+                        help=("Realtime renderer quality preset (IsaacLab 2.x "
+                              "RenderCfg.rendering_mode). IsaacLab 3.0 removed these "
+                              "presets: setting one raises until it is ported."))
 
 
 def run_evaluation(

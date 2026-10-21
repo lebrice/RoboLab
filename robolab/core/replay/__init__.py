@@ -21,7 +21,7 @@ Typical driver flow:
 
     env_cfg = parse_env_cfg(task, ...)
     recorded, path = load_recorded_env_cfg(hdf5_path)
-    apply_recorded_env_cfg(env_cfg, recorded)
+    apply_recorded_env_cfg(env_cfg, recorded, quat_order=recording_quat_order(hdf5_path))
     env, _ = create_env(env_cfg, ...)
     restore_recorded_initial_state(env, hdf5_path, episode)
     # step recorded actions open-loop; StateValidator.check_step() per step

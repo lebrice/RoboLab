@@ -16,6 +16,7 @@ if str(REPO_ROOT) not in sys.path:
 
 import cv2  # noqa: F401 -- must import this before isaaclab. Do not remove
 from isaaclab.app import AppLauncher
+from robolab.core.utils.launcher_utils import add_app_launcher_args  # noqa: E402
 
 from policies.ai_native.agentic.run_config import add_agent_eef_args, build_runtime_options
 from robolab.eval.runner import add_common_eval_args
@@ -23,7 +24,7 @@ from robolab.eval.runner import add_common_eval_args
 parser = argparse.ArgumentParser(description="Evaluate the robot-agnostic Codex App Server Agent-EEF policy.")
 add_agent_eef_args(parser)
 add_common_eval_args(parser)
-AppLauncher.add_app_launcher_args(parser)
+add_app_launcher_args(parser)
 args_cli = parser.parse_args()
 build_runtime_options(args_cli)
 args_cli.enable_cameras = True

@@ -164,12 +164,26 @@ def load_hdf5_provenance(filepath: str) -> dict:
     and ``recorded_at`` were stamped at record time; empty dict for files that
     predate provenance stamping.
     """
-    keys = ("isaaclab_version", "isaacsim_version", "recorded_at")
+    keys = ("isaaclab_version", "isaacsim_version", "recorded_at", "quat_order")
     with h5py.File(filepath, 'r') as f:
         data = f.get('data')
         if data is None:
             return {}
         return {key: data.attrs[key] for key in keys if key in data.attrs}
+
+
+def recording_quat_order(filepath: str) -> str:
+    """Quaternion order of the orientations in a recording: ``"xyzw"`` or ``"wxyz"``.
+
+    IsaacLab 3.0 recordings are (x, y, z, w) and say so in a ``quat_order`` attr; recordings made
+    with IsaacLab 2.x (no attr, ``isaaclab_version`` < 3 or unknown) are (w, x, y, z).
+    """
+    provenance = load_hdf5_provenance(filepath)
+    if "quat_order" in provenance:
+        return str(provenance["quat_order"])
+    version = str(provenance.get("isaaclab_version", ""))
+    major = version.split(".", 1)[0]
+    return "xyzw" if major.isdigit() and int(major) >= 3 else "wxyz"
 
 
 def _load_hdf5_group_tree(filepath: str, episode: int, group_name: str) -> dict:

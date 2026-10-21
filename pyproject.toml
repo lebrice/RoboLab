@@ -31,6 +31,8 @@ dependencies = [
     "opencv-python",
     "Pillow",
     "imageio",
+    # mp4 writing backend for imageio; it used to come in through IsaacLab 2.x (moviepy).
+    "imageio-ffmpeg",
     # Scientific computing
     "scipy",
     "matplotlib",

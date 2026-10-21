@@ -13,7 +13,26 @@ a guess into a measurement.
 import numpy as np
 import torch
 
-from robolab.core.utils.file_utils import load_hdf5_initial_state, load_hdf5_states
+from robolab.core.utils.file_utils import load_hdf5_initial_state, load_hdf5_states, recording_quat_order
+
+
+def _poses_to_xyzw(tree: dict, hdf5_path: str) -> dict:
+    """Reorder the quaternions of a recording's ``root_pose`` leaves to IsaacLab 3.0's (x, y, z, w).
+
+    ``root_pose`` leaves are ``(T, 7)``: position, then orientation. Recordings made with
+    IsaacLab 2.x store (w, x, y, z); 3.0 recordings are already (x, y, z, w) and pass through.
+    """
+    if recording_quat_order(hdf5_path) == "xyzw":
+        return tree
+    converted = {}
+    for key, value in tree.items():
+        if isinstance(value, dict):
+            converted[key] = _poses_to_xyzw(value, hdf5_path)
+        elif key == "root_pose":
+            converted[key] = np.asarray(value)[..., [0, 1, 2, 4, 5, 6, 3]]
+        else:
+            converted[key] = value
+    return converted
 
 
 def restore_recorded_initial_state(env, hdf5_path: str, episode: int) -> None:
@@ -38,7 +57,7 @@ def restore_recorded_initial_state(env, hdf5_path: str, episode: int) -> None:
                 current[key] = row.repeat(env.num_envs, *([1] * (row.ndim - 1)))
 
     try:
-        recorded_state = load_hdf5_initial_state(hdf5_path, episode)
+        recorded_state = _poses_to_xyzw(load_hdf5_initial_state(hdf5_path, episode), hdf5_path)
     except ValueError as err:
         print(f"WARNING: no recorded initial state to restore ({err}); "
               "replaying from default reset state, which may diverge from the recording.")
@@ -72,7 +91,7 @@ class StateValidator:
 
     def __init__(self, hdf5_path: str, episode: int, tolerance: float = 0.01):
         self.tolerance = tolerance
-        self.recorded = _flatten_state_tree(load_hdf5_states(hdf5_path, episode))
+        self.recorded = _flatten_state_tree(_poses_to_xyzw(load_hdf5_states(hdf5_path, episode), hdf5_path))
         self.num_steps = min(leaf.shape[0] for leaf in self.recorded.values())
         self.max_drift = 0.0
         self.max_drift_step = None

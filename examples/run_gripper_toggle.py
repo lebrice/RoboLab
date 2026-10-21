@@ -31,10 +31,11 @@ import sys
 import traceback
 
 from isaaclab.app import AppLauncher
+from robolab.core.utils.launcher_utils import add_app_launcher_args  # noqa: E402
 
 parser = argparse.ArgumentParser(description="Run gripper-toggle episode on a registered task.")
 parser.add_argument("--num_envs", type=int, default=1, help="Number of environments to spawn.")
-AppLauncher.add_app_launcher_args(parser)
+add_app_launcher_args(parser)
 parser.add_argument("--task", nargs="+", default=None,
                     help="List of tasks to run on (default: all registered).")
 parser.add_argument("--tag", nargs="+", default=None,

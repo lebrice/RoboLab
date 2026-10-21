@@ -124,6 +124,9 @@ class StreamingHDF5DatasetFileHandler(DatasetFileHandlerBase):
             except importlib.metadata.PackageNotFoundError:
                 pass
         self._hdf5_data_group.attrs["recorded_at"] = datetime.now(timezone.utc).isoformat(timespec="seconds")
+        # Orientations in this file are IsaacLab 3.0's (x, y, z, w); 2.x recordings, which lack
+        # this attr, are (w, x, y, z). See file_utils.recording_quat_order.
+        self._hdf5_data_group.attrs["quat_order"] = "xyzw"
 
     def __del__(self):
         self.close()

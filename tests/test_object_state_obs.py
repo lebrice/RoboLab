@@ -17,6 +17,13 @@ from robolab.core.observations.observation_utils import (
 )
 
 
+class _Proxy:
+    """Stand-in for IsaacLab 3.0's ProxyArray asset data: a tensor behind `.torch`."""
+
+    def __init__(self, tensor: torch.Tensor):
+        self.torch = tensor
+
+
 class _FakeScene:
     def __init__(self, entities):
         self._entities = entities
@@ -28,9 +35,9 @@ class _FakeScene:
 
 def _make_env():
     banana = SimpleNamespace(data=SimpleNamespace(
-        root_pos_w=torch.tensor([[0.5, 0.0, 0.1], [10.5, 0.0, 0.2]]),
-        root_quat_w=torch.tensor([[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0]]),
-        root_vel_w=torch.zeros(2, 6),
+        root_pos_w=_Proxy(torch.tensor([[0.5, 0.0, 0.1], [10.5, 0.0, 0.2]])),
+        root_quat_w=_Proxy(torch.tensor([[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0]])),
+        root_vel_w=_Proxy(torch.zeros(2, 6)),
     ))
     return SimpleNamespace(scene=_FakeScene({"banana": banana}))
 

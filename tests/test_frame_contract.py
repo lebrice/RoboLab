@@ -45,10 +45,10 @@ def test_frame_compat_fallback(tmp_path):
 
         pos, quat = demo_robot_root_pose(f["data/demo_old"])
         assert pos.shape == (5, 3) and np.abs(pos).max() == 0.0
-        np.testing.assert_allclose(quat, np.tile([1.0, 0.0, 0.0, 0.0], (5, 1)))
+        np.testing.assert_allclose(quat, np.tile([0.0, 0.0, 0.0, 1.0], (5, 1)))  # (x, y, z, w)
 
         pos, quat = demo_robot_root_pose(f["data/demo_bare"])
-        assert pos.shape == (1, 3) and quat[0, 0] == 1.0
+        assert pos.shape == (1, 3) and quat[0, 3] == 1.0
 
         pos, _ = demo_robot_root_pose(f["data/demo_old"], num_steps=9)
         assert pos.shape == (9, 3)
@@ -63,9 +63,9 @@ def test_ee_frame_math_with_offset_root():
     """
     sqrt2_2 = float(np.sqrt(2.0) / 2.0)
     root_pos = torch.tensor([[1.0, 2.0, -0.7]])
-    root_quat = torch.tensor([[sqrt2_2, 0.0, 0.0, sqrt2_2]])  # (w, x, y, z), yaw +90 deg
+    root_quat = torch.tensor([[0.0, 0.0, sqrt2_2, sqrt2_2]])  # (x, y, z, w), yaw +90 deg
     ee_local_pos = torch.tensor([[0.5, 0.0, 0.3]])
-    ee_local_quat = torch.tensor([[1.0, 0.0, 0.0, 0.0]])
+    ee_local_quat = torch.tensor([[0.0, 0.0, 0.0, 1.0]])
 
     # World EE pose, built independently: yaw+90 maps (x, y) -> (-y, x).
     ee_world_pos = torch.tensor([[1.0, 2.5, -0.4]])
@@ -114,9 +114,9 @@ def test_recorded_episode_frame_contract():
             robot = env.scene["robot"]
             body_idx = robot.data.body_names.index("base_link")
             expected_ee_pos.append(
-                (robot.data.body_pos_w[:, body_idx, :] - env.scene.env_origins[:, 0:3]).cpu().numpy()[0]
+                (robot.data.body_pos_w.torch[:, body_idx, :] - env.scene.env_origins[:, 0:3]).cpu().numpy()[0]
             )
-            expected_ee_quat.append(robot.data.body_quat_w[:, body_idx, :].cpu().numpy()[0])
+            expected_ee_quat.append(robot.data.body_quat_w.torch[:, body_idx, :].cpu().numpy()[0])
         export_dir = env.recorder_manager.cfg.dataset_export_dir_path
         end_episode(env)
     finally:
@@ -130,7 +130,7 @@ def test_recorded_episode_frame_contract():
         root_pos, root_quat = demo_robot_root_pose(demo)
         assert root_pos.shape[0] == demo["actions"].shape[0], "root pose is not per-step"
         assert np.abs(root_pos).max() < 1e-4, "DROID root must sit at the env origin"
-        np.testing.assert_allclose(root_quat, np.tile([1.0, 0.0, 0.0, 0.0], (root_quat.shape[0], 1)), atol=1e-5)
+        np.testing.assert_allclose(root_quat, np.tile([0.0, 0.0, 0.0, 1.0], (root_quat.shape[0], 1)), atol=1e-5)
 
         ee = demo["ee_pose"]
         np.testing.assert_allclose(ee["position"][-num_steps:], np.stack(expected_ee_pos), atol=1e-5)

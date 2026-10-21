@@ -189,7 +189,8 @@ def parse_args(argv=None) -> argparse.Namespace:
     from robolab.eval.runner import add_common_eval_args
 
     add_common_eval_args(parser)
-    AppLauncher.add_app_launcher_args(parser)
+    from robolab.core.utils.launcher_utils import add_app_launcher_args
+    add_app_launcher_args(parser)
 
     if any(arg.split("=", 1)[0] in {"--eef-prompt-variant", "--eef_prompt_variant"} for arg in (sys.argv[1:] if argv is None else argv)):
         parser.error("--eef-prompt-variant is retired; select --prompt-family")

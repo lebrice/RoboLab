@@ -42,12 +42,13 @@ import sys
 import traceback
 
 from isaaclab.app import AppLauncher
+from robolab.core.utils.launcher_utils import add_app_launcher_args  # noqa: E402
 
 # add argparse arguments
 parser = argparse.ArgumentParser(description="")
 parser.add_argument("--num_envs", type=int, default=1, help="Number of environments to spawn.")
 # append AppLauncher cli args
-AppLauncher.add_app_launcher_args(parser)
+add_app_launcher_args(parser)
 parser.add_argument("--task", nargs='+', default=None,
                        help="List of tasks to evaluate on ")
 parser.add_argument("--tag", nargs='+', default=None,

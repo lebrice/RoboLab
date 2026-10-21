@@ -40,6 +40,7 @@ import sys
 import traceback
 
 from isaaclab.app import AppLauncher
+from robolab.core.utils.launcher_utils import add_app_launcher_args  # noqa: E402
 from robolab.constants import PACKAGE_DIR, set_output_dir # noqa
 
 # add argparse arguments
@@ -64,7 +65,7 @@ parser.add_argument("--env-config", choices=["recorded", "current"], default="re
 parser.add_argument("--validate-states", action="store_true",
                     help="Debug tool: compare the sim state against the recorded per-step states and report drift.")
 # append AppLauncher cli args
-AppLauncher.add_app_launcher_args(parser)
+add_app_launcher_args(parser)
 
 # parse the arguments
 args_cli, _= parser.parse_known_args()
@@ -76,6 +77,7 @@ simulation_app = app_launcher.app
 from episodes import run_prerecorded_episode_hdf5 # noqa
 from robolab.core.environments.config import parse_env_cfg # noqa
 from robolab.core.replay import apply_recorded_env_cfg, load_recorded_env_cfg # noqa
+from robolab.core.utils.file_utils import recording_quat_order # noqa
 from robolab.core.environments.runtime import create_env, end_episode # noqa
 from robolab.core.task.instruction import primary_instruction # noqa
 from robolab.registrations.droid.auto_env_registrations_jointpos import auto_register_droid_envs # noqa
@@ -114,7 +116,7 @@ def resolve_replay_env_cfg(task_env: str, hdf5_path: str):
     recorded_cfg, sidecar_path = loaded
     env_cfg = parse_env_cfg(task_env, device=args_cli.device, seed=0, num_envs=args_cli.num_envs,
                             env_spacing=None, eye=None, lookat=None, use_fabric=True)
-    skipped = apply_recorded_env_cfg(env_cfg, recorded_cfg)
+    skipped = apply_recorded_env_cfg(env_cfg, recorded_cfg, quat_order=recording_quat_order(hdf5_path))
     print(f"Restored recorded env config from {sidecar_path}")
     if skipped:
         print(f"\033[93mWARNING: {len(skipped)} recorded config field(s) no longer match the current "
@@ -170,8 +172,14 @@ def main():
                 headless=args_cli.headless,
                 validate_states=args_cli.validate_states)
 
-            # Write v2 per-env event logs
+            # Pull events before end_episode (which may reset the env), as run_empty.py does.
             per_env_events = get_all_env_events(env) or []
+            # Export what the recorder still buffers: envs that terminated were exported by
+            # RobolabEnv already, but a replay that runs out of recorded actions first would
+            # otherwise keep only its auto-flushed (every 500 steps) prefix.
+            end_episode(env)
+
+            # Write v2 per-env event logs
             for eid in range(args_cli.num_envs):
                 events = per_env_events[eid] if eid < len(per_env_events) else []
                 log_obj = {

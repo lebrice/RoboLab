@@ -1,43 +1,45 @@
 # SPDX-FileCopyrightText: Copyright (c) 2026 NVIDIA CORPORATION & AFFILIATES. All rights reserved.
 # SPDX-License-Identifier: Apache-2.0
 
-"""Guard the eval runner's argparse wiring against AppLauncher collisions.
+"""Guard the eval runner's argparse wiring against launcher-flag collisions.
 
 The per-policy runners build their parser as::
 
     add_common_eval_args(parser)
-    AppLauncher.add_app_launcher_args(parser)
+    add_app_launcher_args(parser)  # robolab.core.utils.launcher_utils
 
-IsaacLab 2.3's ``add_app_launcher_args`` raises ``ValueError`` if the parser
-already declares a field it owns (e.g. ``rendering_mode``). This never shows up
-in the other tests because they drive ``AppLauncher`` directly rather than
-through the runner's parser — so it's asserted explicitly here.
+argparse raises if two calls declare the same flag. This never shows up in the
+other tests because they drive ``AppLauncher`` directly rather than through the
+runner's parser — so it's asserted explicitly here.
 """
 
 import argparse
 
-from isaaclab.app import AppLauncher
-
+from robolab.core.utils.launcher_utils import add_app_launcher_args
 from robolab.eval.runner import add_common_eval_args
 
 
 def test_common_eval_args_do_not_collide_with_app_launcher():
     parser = argparse.ArgumentParser()
     add_common_eval_args(parser)
-    # Must not raise: AppLauncher owns `rendering_mode`, so add_common_eval_args
-    # must not declare it (or any other AppLauncher-owned field).
-    AppLauncher.add_app_launcher_args(parser)
+    # Must not raise: add_common_eval_args must not declare any launcher-owned flag.
+    add_app_launcher_args(parser)
 
     dests = {action.dest for action in parser._actions}
-    # `renderer` and `rendering_type` are ours; `rendering_mode` is owned by
-    # AppLauncher. run_evaluation() consumes args.renderer and args.rendering_type,
-    # so both of ours must be present, and AppLauncher's field must coexist.
-    assert "renderer" in dests
-    assert "rendering_type" in dests
-    assert "rendering_mode" in dests
-    assert "enable_gt_state" in dests
-    assert "run_index_offset" in dests
-    assert "seed" in dests
+    # run_evaluation() consumes all of these; `device` and `headless` come from the launcher
+    # helper (IsaacLab 3.0 itself no longer registers --headless).
+    for dest in ("renderer", "rendering_type", "enable_gt_state", "run_index_offset", "seed",
+                 "device", "headless"):
+        assert dest in dests
+
+
+def test_headless_flag_is_accepted():
+    # IsaacLab 3.0 runs headless by default; RoboLab's docs and scripts still pass --headless.
+    parser = argparse.ArgumentParser()
+    add_common_eval_args(parser)
+    add_app_launcher_args(parser)
+
+    assert parser.parse_args(["--headless"]).headless is True
 
 
 def test_run_index_offset_defaults_to_zero_and_accepts_an_override():

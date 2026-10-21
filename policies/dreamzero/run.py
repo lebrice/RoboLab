@@ -9,6 +9,7 @@ import traceback
 
 import cv2  # noqa: F401 -- must import this before isaaclab. Do not remove
 from isaaclab.app import AppLauncher
+from robolab.core.utils.launcher_utils import add_app_launcher_args  # noqa: E402
 
 POLICY = "dreamzero"
 
@@ -42,7 +43,7 @@ parser.add_argument("--cam2-source", default="black",
 from robolab.eval.runner import add_common_eval_args, run_evaluation  # noqa: E402
 
 add_common_eval_args(parser)
-AppLauncher.add_app_launcher_args(parser)
+add_app_launcher_args(parser)
 
 args_cli = parser.parse_args()
 args_cli.enable_cameras = True

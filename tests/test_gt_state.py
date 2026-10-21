@@ -18,6 +18,13 @@ from robolab.eval.gt_state import GroundTruthStateExporter
 NUM_ENVS = 2
 
 
+class _Proxy:
+    """Stand-in for IsaacLab 3.0's ProxyArray asset data: a tensor behind `.torch`."""
+
+    def __init__(self, tensor: torch.Tensor):
+        self.torch = tensor
+
+
 class _FakeSubtaskTerm(SubtaskCompletionRecorderTerm):
     """Real type (so isinstance-based lookup works) without the heavy init."""
 
@@ -66,11 +73,11 @@ class _FakeWorld:
         return SimpleNamespace(
             data=SimpleNamespace(
                 body_names=["base_link"],
-                body_pos_w=body_pos,
-                body_quat_w=torch.tensor([[[1.0, 0.0, 0.0, 0.0]]] * NUM_ENVS),
+                body_pos_w=_Proxy(body_pos),
+                body_quat_w=_Proxy(torch.tensor([[[1.0, 0.0, 0.0, 0.0]]] * NUM_ENVS)),
                 joint_names=["finger_joint"],
                 # Env 0 open, env 1 fully closed.
-                joint_pos=torch.tensor([[0.0], [np.pi / 4]]),
+                joint_pos=_Proxy(torch.tensor([[0.0], [np.pi / 4]])),
             )
         )
 

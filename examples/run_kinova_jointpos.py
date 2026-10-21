@@ -13,11 +13,12 @@ import traceback
 
 import cv2  # noqa: F401  must be imported before isaaclab
 from isaaclab.app import AppLauncher
+from robolab.core.utils.launcher_utils import add_app_launcher_args  # noqa: E402
 
 
 parser = argparse.ArgumentParser()
 parser.add_argument("--num-steps", type=int, default=180)
-AppLauncher.add_app_launcher_args(parser)
+add_app_launcher_args(parser)
 args_cli, _ = parser.parse_known_args()
 args_cli.enable_cameras = True
 simulation_app = AppLauncher(args_cli).app
