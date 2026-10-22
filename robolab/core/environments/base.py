@@ -170,7 +170,8 @@ class RobolabDefaultEnvCfg(ManagerBasedRLEnvCfg):
     events = None
     curriculum = None
     recorders = None
-    rerender_on_reset: bool = True
+    # IsaacLab 3.0's replacement for rerender_on_reset=True (which it maps to 1 rerender).
+    num_rerenders_on_reset: int = 1
     seed: int | None = 0
     subtasks: list[dict[str, dict]] | None = None
     # Set from the robot cfg's mandatory ee_recorder_bodies label (HDF5 channel

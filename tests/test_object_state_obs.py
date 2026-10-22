@@ -36,7 +36,8 @@ class _FakeScene:
 def _make_env():
     banana = SimpleNamespace(data=SimpleNamespace(
         root_pos_w=_Proxy(torch.tensor([[0.5, 0.0, 0.1], [10.5, 0.0, 0.2]])),
-        root_quat_w=_Proxy(torch.tensor([[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0]])),
+        # IsaacLab 3.0 data: (x, y, z, w). Env 0 identity, env 1 180 deg about x.
+        root_quat_w=_Proxy(torch.tensor([[0.0, 0.0, 0.0, 1.0], [1.0, 0.0, 0.0, 0.0]])),
         root_vel_w=_Proxy(torch.zeros(2, 6)),
     ))
     return SimpleNamespace(scene=_FakeScene({"banana": banana}))
@@ -52,7 +53,8 @@ def test_object_state_funcs_report_env_local_pos_and_world_quat():
 
     # Position is env-local: env 1's world x of 10.5 minus its origin at x=10.
     torch.testing.assert_close(pos, torch.tensor([[0.5, 0.0, 0.1], [0.5, 0.0, 0.2]]))
-    torch.testing.assert_close(quat[1], torch.tensor([0.0, 1.0, 0.0, 0.0]))
+    # Observations use RoboLab's policy-facing (w, x, y, z) order.
+    torch.testing.assert_close(quat, torch.tensor([[1.0, 0.0, 0.0, 0.0], [0.0, 1.0, 0.0, 0.0]]))
     assert vel.shape == (2, 6)
 
 

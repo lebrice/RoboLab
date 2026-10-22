@@ -50,22 +50,25 @@ class FrankaCfg:
     actuators={
         "panda_shoulder": ImplicitActuatorCfg(
             joint_names_expr=["panda_joint[1-4]"],
-            effort_limit=87.0,
-            velocity_limit=2.175,
+            actuator_effort_limit=87.0,
+            joint_effort_limit=87.0,
+            actuator_velocity_limit=2.175,
             stiffness=400.0,# 80.0, # HIGH_PD_CFG
             damping=80.0, # 4.0, # HIGH_PD_CFG
         ),
         "panda_forearm": ImplicitActuatorCfg(
             joint_names_expr=["panda_joint[5-7]"],
-            effort_limit=12.0,
-            velocity_limit=2.61,
+            actuator_effort_limit=12.0,
+            joint_effort_limit=12.0,
+            actuator_velocity_limit=2.61,
             stiffness=400.0, # 80.0, # HIGH_PD_CFG
             damping=80.0, # 4.0, # HIGH_PD_CFG
         ),
         "panda_hand": ImplicitActuatorCfg(
             joint_names_expr=["panda_finger_joint.*"],
-            effort_limit=200.0,
-            velocity_limit=0.2,
+            actuator_effort_limit=200.0,
+            joint_effort_limit=200.0,
+            actuator_velocity_limit=0.2,
             stiffness=2e3,
             damping=1e2,
         ),

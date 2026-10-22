@@ -11,6 +11,7 @@ from isaaclab.managers import ObservationTermCfg as ObsTerm
 from isaaclab.managers import SceneEntityCfg
 from isaaclab.sensors import CameraCfg
 from isaaclab.utils import configclass
+from isaaclab.utils.math import convert_quat
 
 
 def camera_image(
@@ -78,7 +79,8 @@ def camera_pos(env: Any, sensor_cfg: SceneEntityCfg) -> torch.Tensor:
 def camera_quat(env: Any, sensor_cfg: SceneEntityCfg) -> torch.Tensor:
     """Camera orientation, world frame, OpenGL convention, (w, x, y, z). Shape (num_envs, 4)."""
     sensor = env.scene.sensors[sensor_cfg.name]
-    return sensor.data.quat_w_opengl.torch
+    # (w, x, y, z): RoboLab's policy-facing order (IsaacLab 3.0 itself uses x, y, z, w).
+    return convert_quat(sensor.data.quat_w_opengl.torch, to="wxyz")
 
 
 def camera_intrinsics(env: Any, sensor_cfg: SceneEntityCfg) -> torch.Tensor:
@@ -98,7 +100,8 @@ def object_pos(env: Any, asset_cfg: SceneEntityCfg) -> torch.Tensor:
 
 def object_quat(env: Any, asset_cfg: SceneEntityCfg) -> torch.Tensor:
     """Object root orientation, world frame, (w, x, y, z). Shape (num_envs, 4)."""
-    return env.scene[asset_cfg.name].data.root_quat_w.torch
+    # (w, x, y, z): RoboLab's policy-facing order (IsaacLab 3.0 itself uses x, y, z, w).
+    return convert_quat(env.scene[asset_cfg.name].data.root_quat_w.torch, to="wxyz")
 
 
 def object_vel(env: Any, asset_cfg: SceneEntityCfg) -> torch.Tensor:

@@ -14,6 +14,9 @@ from isaaclab.managers import SceneEntityCfg
 from isaaclab.sensors.frame_transformer.frame_transformer import FrameTransformer
 from isaaclab.utils import configclass
 from isaaclab.utils.math import subtract_frame_transforms
+from isaaclab.utils.math import convert_quat
+
+from robolab.robots.ik_actions import WxyzPoseDifferentialIKAction
 
 ########################################################
 # Actions
@@ -31,6 +34,7 @@ class FrankaIKActionCfg:
         if self.cfg.command_type == "pose" and not self.cfg.use_relative_mode, action_dim = 7, (x, y, z, qw, qx, qy, qz)
     """
     arm_action = DifferentialInverseKinematicsActionCfg(
+        class_type=WxyzPoseDifferentialIKAction,
         asset_name="robot",
         joint_names=["panda_joint.*"],
         body_name="panda_hand",
@@ -120,7 +124,8 @@ def ee_frame_quat(env: ManagerBasedRLEnv, ee_frame_cfg: SceneEntityCfg = SceneEn
     _, ee_frame_quat = subtract_frame_transforms(
         robot.data.root_pos_w.torch, robot.data.root_quat_w.torch, q02=ee_frame.data.target_quat_w.torch[:, 0, :]
     )
-    return ee_frame_quat
+    # (w, x, y, z): RoboLab's policy-facing order (IsaacLab 3.0 itself uses x, y, z, w).
+    return convert_quat(ee_frame_quat, to="wxyz")
 
 
 def gripper_pos(env: ManagerBasedRLEnv, robot_cfg: SceneEntityCfg = SceneEntityCfg("robot")) -> torch.Tensor:

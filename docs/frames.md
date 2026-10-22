@@ -10,11 +10,20 @@ frame. This document is the contract that removes that assumption.
 | **env-local** | World minus the env's `scene.env_origins` translation. Replication is pure translation, so env-local and world share axes and orientations. Task scenes, objects, and the ground plane are authored in this frame; the origin sits at the table-mount plane (the ground is authored *below* it, at the canonical z = −0.697; a few legacy scenes keep −0.65, see `tests/test_scene_ground.py`). |
 | **robot-root** | The robot articulation's root-link pose. For Franka-family robots the root is at the env origin with identity rotation, so robot-root and env-local coincide **numerically** — this is a coincidence of those embodiments, not a rule. Floor-standing robots author their root elsewhere. |
 
-**Conventions:** translations in meters; quaternions `(w, x, y, z)`; env-local
-= world with `env_origins` subtracted from positions only (orientations are
-unaffected by the replication offset). One exception to the quaternion
-ordering: recorded camera extrinsics use IsaacLab's `quat_w_ros`, which is ROS
-order `(x, y, z, w)` — see the table below.
+**Conventions:** translations in meters; env-local = world with `env_origins`
+subtracted from positions only (orientations are unaffected by the replication
+offset).
+
+**Quaternion order.** IsaacLab 3.0 uses `(x, y, z, w)`, and so does everything
+that faces the simulator: recorded HDF5 orientations (`ee_pose`,
+`robot_root_pose`, `states`, `initial_state`, camera extrinsics), `WorldState`
+poses and predicates, and the `rot` fields of configs. Recordings say so in the
+`quat_order` attribute of their `data` group; recordings made with IsaacLab 2.x
+lack it and are `(w, x, y, z)`, which replay converts
+(`file_utils.recording_quat_order`). The policy-facing interface keeps
+RoboLab's `(w, x, y, z)`: the quaternion observation terms (`ee_quat`,
+`eef_quat`, `camera_quat`, `<object>_quat`) and absolute-pose IK actions
+`(x, y, z, qw, qx, qy, qz)`.
 
 ## Robot placement
 

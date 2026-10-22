@@ -55,7 +55,7 @@ Each `run_{i}.hdf5` file contains the following hierarchical structure (`h5glanc
   │ ├actions      [float32: 470 × 8]
   │ ├ee_pose
   │ │ ├position         [float32: 470 × 3]   # EE (base_link) position, relative to env origin
-  │ │ ├orientation      [float32: 470 × 4]   # world-frame quaternion (wxyz)
+  │ │ ├orientation      [float32: 470 × 4]   # quaternion (xyzw; wxyz in IsaacLab 2.x recordings)
   │ │ ├linear_velocity  [float32: 470 × 3]   # world frame
   │ │ └angular_velocity [float32: 470 × 3]   # world frame
   │ ├initial_state
@@ -138,7 +138,7 @@ static per-env translation.
 - **`actions`**: Robot control commands (8-dimensional for joint positions)
 - **`ee_pose`**: Per-step end-effector (`base_link`) pose and velocity
   - **`position`**: EE position, `(T, 3)`, env-local (relative to env origin)
-  - **`orientation`**: EE orientation as a world-frame quaternion `(w, x, y, z)`, `(T, 4)`
+  - **`orientation`**: EE orientation as a quaternion `(x, y, z, w)`, `(T, 4)` (recordings made with IsaacLab 2.x: `(w, x, y, z)`; see the `quat_order` attribute of `data` and [frames.md](frames.md))
   - **`linear_velocity`** / **`angular_velocity`**: EE velocities in world frame, `(T, 3)`
 - **`initial_state`**: Starting configuration of robot, objects, and cameras
   - **`cameras/{name}`**: Per-camera extrinsics captured after reset/randomization — `position` (env-local, `(1, 3)`) and `orientation` (world-frame ROS quaternion `(x, y, z, w)`, `(1, 4)`). One entry per camera sensor in the scene.

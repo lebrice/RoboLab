@@ -40,7 +40,9 @@ robolab.constants.RECORD_IMAGE_DATA = False
 # specify targets in eef_frame coordinates, the demo converts on the command side:
 # target_base_quat = target_eef_quat ⊗ R_offset⁻¹. See DroidIKActionCfg's docstring
 # for why we don't put R_offset in body_offset.
-_EEF_OFFSET_ROT_T = torch.tensor(EEF_OFFSET_ROT, dtype=torch.float32)
+# This demo does its quaternion math in (w, x, y, z), RoboLab's policy-facing order (the IK
+# action and ee_quat observations use it); EEF_OFFSET_ROT and IsaacLab 3.0 data are (x, y, z, w).
+_EEF_OFFSET_ROT_T = torch.tensor(EEF_OFFSET_ROT, dtype=torch.float32)[[3, 0, 1, 2]]
 
 
 def quat_mul(q1: torch.Tensor, q2: torch.Tensor) -> torch.Tensor:
@@ -93,7 +95,7 @@ def main():
     def read_eef_pose():
         return (
             frames.data.target_pos_w.torch[0, eef_idx, :].cpu().clone(),
-            frames.data.target_quat_w.torch[0, eef_idx, :].cpu().clone(),
+            frames.data.target_quat_w.torch[0, eef_idx, :].cpu().clone()[[3, 0, 1, 2]],  # -> wxyz
         )
 
     initial_pos, initial_quat = read_eef_pose()
@@ -147,7 +149,7 @@ def main():
 
         # Update the single goal-pose axis triad at /Visuals/Axes/target_goal.
         # visualize_axes deletes and respawns the prim under the same name.
-        visualize_axes(target_pos, target_quat, "target_goal", axis_length=0.2)
+        visualize_axes(target_pos, target_quat[[1, 2, 3, 0]], "target_goal", axis_length=0.2)  # takes xyzw
 
         # Convert eef_frame target → base_link target (since IK now tracks base_link).
         # body_offset.pos = 0, so positions are equal; only the orientation needs to

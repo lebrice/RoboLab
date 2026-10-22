@@ -14,6 +14,7 @@ from isaaclab.sensors.frame_transformer.frame_transformer_cfg import FrameTransf
 from isaaclab.utils import configclass
 from isaaclab.utils.assets import ISAACLAB_NUCLEUS_DIR
 from isaaclab.utils.math import subtract_frame_transforms
+from isaaclab.utils.math import convert_quat
 
 from robolab.core.environments.scene_fixture import FRANKA_TABLE_FIXTURE
 from robolab.robots.franka_definitions import *  # noqa
@@ -57,22 +58,25 @@ class FrankaCfg:
     actuators={
         "panda_shoulder": ImplicitActuatorCfg(
             joint_names_expr=["panda_joint[1-4]"],
-            effort_limit=87.0,
-            velocity_limit=2.175,
+            actuator_effort_limit=87.0,
+            joint_effort_limit=87.0,
+            actuator_velocity_limit=2.175,
             stiffness=80.0,
             damping=4.0,
         ),
         "panda_forearm": ImplicitActuatorCfg(
             joint_names_expr=["panda_joint[5-7]"],
-            effort_limit=12.0,
-            velocity_limit=2.61,
+            actuator_effort_limit=12.0,
+            joint_effort_limit=12.0,
+            actuator_velocity_limit=2.61,
             stiffness=80.0,
             damping=4.0,
         ),
         "panda_hand": ImplicitActuatorCfg(
             joint_names_expr=["panda_finger_joint.*"],
-            effort_limit=200.0,
-            velocity_limit=0.2,
+            actuator_effort_limit=200.0,
+            joint_effort_limit=200.0,
+            actuator_velocity_limit=0.2,
             stiffness=2e3,
             damping=1e2,
         ),
@@ -176,7 +180,8 @@ def ee_frame_quat(env: ManagerBasedRLEnv, frames_cfg: SceneEntityCfg = SceneEnti
     _, ee_frame_quat = subtract_frame_transforms(
         robot.data.root_pos_w.torch, robot.data.root_quat_w.torch, q02=frames.data.target_quat_w.torch[:, 0, :]
     )
-    return ee_frame_quat
+    # (w, x, y, z): RoboLab's policy-facing order (IsaacLab 3.0 itself uses x, y, z, w).
+    return convert_quat(ee_frame_quat, to="wxyz")
 
 
 def gripper_pos(env: ManagerBasedRLEnv, robot_cfg: SceneEntityCfg = SceneEntityCfg("robot")) -> torch.Tensor:

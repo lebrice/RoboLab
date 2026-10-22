@@ -21,13 +21,15 @@ from isaaclab.managers import ObservationGroupCfg as ObsGroup
 from isaaclab.managers import ObservationTermCfg as ObsTerm
 from isaaclab.managers import SceneEntityCfg
 from isaaclab.markers.config import FRAME_MARKER_CFG
-from isaaclab.sensors import TiledCameraCfg
+from isaaclab.sensors import CameraCfg
 from isaaclab.sensors.frame_transformer.frame_transformer_cfg import FrameTransformerCfg, OffsetCfg
 from isaaclab.utils import configclass, noise
 from isaaclab.utils.math import subtract_frame_transforms
+from isaaclab.utils.math import convert_quat
 
 from robolab.constants import ROBOTS_DIR
 from robolab.core.environments.scene_fixture import FRANKA_TABLE_FIXTURE
+from robolab.robots.ik_actions import WxyzPoseDifferentialIKAction
 
 # Offset of the end-effector control frame relative to base_link. Used by:
 #   - DroidCfg.frames "eef_frame" (FrameTransformer publishes this pose for downstream code)
@@ -39,7 +41,7 @@ EEF_OFFSET_ROT: tuple[float, float, float, float] = (-0.5, 0.5, -0.5, 0.5)
 _frame_marker_cfg = FRAME_MARKER_CFG.replace(prim_path="/Visuals/TF")
 _frame_marker_cfg.markers["frame"].scale = (0.05, 0.05, 0.05)
 
-_WRIST_CAM = TiledCameraCfg(
+_WRIST_CAM = CameraCfg(
     # Deliberately named wrist_cam (not wrist_camera) to avoid collision with the
     # wrist_camera prim baked into the robot USD, which has different intrinsics.
     # We spawn our own sensor here with policy-calibrated focal_length 2.8 to match
@@ -54,7 +56,7 @@ _WRIST_CAM = TiledCameraCfg(
         horizontal_aperture=5.376,
         vertical_aperture=3.024,
     ),
-    offset=TiledCameraCfg.OffsetCfg(
+    offset=CameraCfg.OffsetCfg(
         pos=(0.011, -0.031, -0.074), rot=(0.570, 0.576, -0.409, -0.420), convention="opengl"
     ),
 )
@@ -102,8 +104,9 @@ class DroidCfg:
                 joint_names_expr=["panda_joint[1-4]"],
                 # stiffness=None,
                 # damping=None,
-                effort_limit=87.0,
-                velocity_limit=2.175,
+                actuator_effort_limit=87.0,
+                joint_effort_limit=87.0,
+                actuator_velocity_limit=2.175,
                 stiffness=400.0,
                 damping=80.0,
             ),
@@ -111,8 +114,9 @@ class DroidCfg:
                 joint_names_expr=["panda_joint[5-7]"],
                 # stiffness=None,
                 # damping=None,
-                effort_limit=12.0,
-                velocity_limit=2.61,
+                actuator_effort_limit=12.0,
+                joint_effort_limit=12.0,
+                actuator_velocity_limit=2.61,
                 stiffness=400.0,
                 damping=80.0,
             ),
@@ -121,7 +125,7 @@ class DroidCfg:
                 stiffness=None,
                 damping=None,
                 # effort_limit=150.0,
-                velocity_limit=5.0, #2.175,
+                actuator_velocity_limit=5.0, #2.175,
                 # stiffness=1000.0,
                 # damping=40.0,
             ),
@@ -271,7 +275,8 @@ def ee_quat(
         _to_torch(robot.data.root_quat_w.torch),
         q02=_to_torch(robot.data.body_quat_w.torch)[:, body_idx, :],
     )
-    return quat
+    # (w, x, y, z): RoboLab's policy-facing order (IsaacLab 3.0 itself uses x, y, z, w).
+    return convert_quat(quat, to="wxyz")
 
 
 def eef_pos(env: ManagerBasedRLEnv, asset_cfg: SceneEntityCfg = SceneEntityCfg("frames")):
@@ -297,7 +302,8 @@ def eef_quat(env: ManagerBasedRLEnv, asset_cfg: SceneEntityCfg = SceneEntityCfg(
         _to_torch(robot.data.root_quat_w.torch),
         q02=_to_torch(frames.data.target_quat_w.torch)[:, idx, :],
     )
-    return quat
+    # (w, x, y, z): RoboLab's policy-facing order (IsaacLab 3.0 itself uses x, y, z, w).
+    return convert_quat(quat, to="wxyz")
 
 ########################################################
 # Actions
@@ -374,6 +380,7 @@ class DroidIKActionCfg:
         if self.cfg.command_type == "pose" and not self.cfg.use_relative_mode, action_dim = 7, (x, y, z, qw, qx, qy, qz)
     """
     arm_action = DifferentialInverseKinematicsActionCfg(
+        class_type=WxyzPoseDifferentialIKAction,
         asset_name="robot",
         joint_names=["panda_joint.*"],
         body_name="base_link",  # Robotiq 2F-85 base flange (gripper mount); matches ee_pos/ee_quat helpers

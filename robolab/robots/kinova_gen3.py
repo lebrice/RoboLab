@@ -16,9 +16,10 @@ from isaaclab.envs import ManagerBasedRLEnv
 from isaaclab.managers import ObservationGroupCfg as ObsGroup
 from isaaclab.managers import ObservationTermCfg as ObsTerm
 from isaaclab.managers import SceneEntityCfg
-from isaaclab.sensors import TiledCameraCfg
+from isaaclab.sensors import CameraCfg
 from isaaclab.sensors.frame_transformer.frame_transformer_cfg import FrameTransformerCfg
 from isaaclab.utils import configclass
+from isaaclab.utils.math import convert_quat
 
 from robolab.constants import ROBOTS_DIR
 from robolab.robots.droid import BinaryJointPositionZeroToOneActionCfg
@@ -35,7 +36,7 @@ GRIPPER_JOINT_COMMANDS = {
 }
 END_EFFECTOR_LINK_NAME = "robotiq_85_base_link"
 
-_WRIST_CAM = TiledCameraCfg(
+_WRIST_CAM = CameraCfg(
     # Keep the camera on bracelet_link so it follows the physical Kinova mount.
     prim_path="{ENV_REGEX_NS}/robot/bracelet_link/wrist_cam",
     height=720,
@@ -48,7 +49,7 @@ _WRIST_CAM = TiledCameraCfg(
         horizontal_aperture=3.84,
         vertical_aperture=2.16,
     ),
-    offset=TiledCameraCfg.OffsetCfg(
+    offset=CameraCfg.OffsetCfg(
         # Kortex's simulation-camera pose expressed in the bracelet frame.
         pos=(0.0, -0.05639, -0.074575),
         rot=(0.5, 0.5, -0.5, 0.5),
@@ -100,22 +101,25 @@ class KinovaGen3Cfg:
         actuators={
             "arm_1_to_4": ImplicitActuatorCfg(
                 joint_names_expr=["joint_[1-4]"],
-                effort_limit=39.0,
-                velocity_limit=1.3963,
+                actuator_effort_limit=39.0,
+                joint_effort_limit=39.0,
+                actuator_velocity_limit=1.3963,
                 stiffness=80.0,
                 damping=4.0,
             ),
             "arm_5_to_7": ImplicitActuatorCfg(
                 joint_names_expr=["joint_[5-7]"],
-                effort_limit=9.0,
-                velocity_limit=1.2218,
+                actuator_effort_limit=9.0,
+                joint_effort_limit=9.0,
+                actuator_velocity_limit=1.2218,
                 stiffness=80.0,
                 damping=4.0,
             ),
             "gripper": ImplicitActuatorCfg(
                 joint_names_expr=list(GRIPPER_JOINT_COMMANDS),
-                effort_limit=50.0,
-                velocity_limit=0.5,
+                actuator_effort_limit=50.0,
+                joint_effort_limit=50.0,
+                actuator_velocity_limit=0.5,
                 stiffness=100.0,
                 damping=5.0,
             ),
@@ -173,7 +177,8 @@ def eef_quat(
 ):
     frames = env.scene[asset_cfg.name]
     index = frames.data.target_frame_names.index("eef_frame")
-    return _to_torch(frames.data.target_quat_w.torch)[:, index, :]
+    # (w, x, y, z): RoboLab's policy-facing order (IsaacLab 3.0 itself uses x, y, z, w).
+    return convert_quat(_to_torch(frames.data.target_quat_w.torch)[:, index, :], to="wxyz")
 
 
 @configclass

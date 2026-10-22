@@ -591,8 +591,10 @@ class WorldState:
     def _in_contact_pair(self, body1: str, body2: str, force_threshold: float, env_id: int | None):
         """Contact check for one concrete sensor pair (no alias resolution)."""
         contact_sensor = get_contact_sensor(self.env.scene, body1, body2)
+        # Normal forces only, as force_matrix_w was in IsaacLab 2.x: on IsaacSim 6.2,
+        # force_matrix_w also includes friction, which would shift every contact threshold.
         if env_id is not None:
-            force_matrix = contact_sensor.data.force_matrix_w.torch[env_id]
+            force_matrix = contact_sensor.data.normal_force_matrix_w.torch[env_id]
             return torch.any(torch.abs(force_matrix) > force_threshold).item()
         else:
             # force_matrix_w documented shape: (num_envs, num_bodies, num_filter_bodies, 3).
@@ -600,7 +602,7 @@ class WorldState:
             # ever returns a different rank — silent shape drift here would
             # collapse the env axis and report cross-env contact (every env in
             # the batch reports True iff any one env has contact).
-            force_matrix = contact_sensor.data.force_matrix_w.torch
+            force_matrix = contact_sensor.data.normal_force_matrix_w.torch
             assert force_matrix.ndim == 4 and force_matrix.shape[-1] == 3, (
                 f"in_contact: expected force_matrix_w shape (N, B, M, 3), "
                 f"got {tuple(force_matrix.shape)}"
@@ -647,7 +649,7 @@ class WorldState:
                 print(f"[WorldState] Batch sensor for '{body}' not found. Available sensors: {available_sensors}. Found '{body}' in contact with: {objects_in_contact}")
             return objects_in_contact
 
-        force_matrix = batch_sensor.data.force_matrix_w.torch[env_id]
+        force_matrix = batch_sensor.data.normal_force_matrix_w.torch[env_id]
         force_above_threshold = torch.abs(force_matrix) > force_threshold
         any_force_per_body = torch.any(force_above_threshold, dim=-1)
         in_contact_mask = torch.any(any_force_per_body, dim=0)
@@ -677,11 +679,11 @@ class WorldState:
         """
         contact_sensor, is_reversed = get_contact_sensor_with_order(self.env.scene, body1, body2)
         if env_id is not None:
-            force_matrix = contact_sensor.data.force_matrix_w.torch[env_id]
+            force_matrix = contact_sensor.data.normal_force_matrix_w.torch[env_id]
             net_force = force_matrix.sum(dim=(0, 1))  # (3,)
         else:
             # (num_envs, num_bodies, num_filter_bodies, 3) → (num_envs, 3)
-            force_matrix = contact_sensor.data.force_matrix_w.torch
+            force_matrix = contact_sensor.data.normal_force_matrix_w.torch
             net_force = force_matrix.sum(dim=(1, 2))  # (N, 3)
 
         if is_reversed:

@@ -4,7 +4,7 @@
 import copy
 
 import isaaclab.sim as sim_utils
-from isaaclab.sensors import CameraCfg, TiledCameraCfg
+from isaaclab.sensors import CameraCfg
 from isaaclab.utils import configclass
 
 
@@ -39,7 +39,7 @@ class OverShoulderLeftCameraCfg:
     Mounted to the left of the robot workspace at (0.05, 0.57, 0.66).
     Look direction: (0.63, -0.48, -0.62) — looking right-and-down toward workspace.
     """
-    over_shoulder_left_camera = TiledCameraCfg(
+    over_shoulder_left_camera = CameraCfg(
         prim_path="{ENV_REGEX_NS}/over_shoulder_left_camera",
         height=720,
         width=1280,
@@ -50,7 +50,7 @@ class OverShoulderLeftCameraCfg:
             horizontal_aperture=5.376,
             vertical_aperture=3.024,
         ),
-        offset=TiledCameraCfg.OffsetCfg(
+        offset=CameraCfg.OffsetCfg(
             pos=(0.05, 0.57, 0.66), rot=(-0.195, 0.399, 0.805, -0.393), convention="opengl"
         ),
     )
@@ -69,7 +69,7 @@ class OverShoulderRightCameraCfg:
     the XZ-mirrored left-camera basis vectors with the right-vector sign corrected for
     right-handedness. Converting that matrix to quaternion gives (0.805, 0.399, -0.195, -0.393).
     """
-    over_shoulder_right_camera = TiledCameraCfg(
+    over_shoulder_right_camera = CameraCfg(
         prim_path="{ENV_REGEX_NS}/over_shoulder_right_camera",
         height=720,
         width=1280,
@@ -80,7 +80,7 @@ class OverShoulderRightCameraCfg:
             horizontal_aperture=5.376,
             vertical_aperture=3.024,
         ),
-        offset=TiledCameraCfg.OffsetCfg(
+        offset=CameraCfg.OffsetCfg(
             pos=(0.05, -0.57, 0.66), rot=(0.399, -0.195, -0.393, 0.805), convention="opengl"
         ),
     )
@@ -95,7 +95,7 @@ class HeadCameraCfg:
     Rotation computed as pure Y-axis rotation mapping camera -Z to look direction:
     q = (0, sin(28.3°), 0, cos(28.3°)) = (0, 0.474, 0, 0.881).
     """
-    head_camera = TiledCameraCfg(
+    head_camera = CameraCfg(
         prim_path="{ENV_REGEX_NS}/head_camera",
         height=720,
         width=1280,
@@ -106,7 +106,7 @@ class HeadCameraCfg:
             horizontal_aperture=5.376,
             vertical_aperture=3.024,
         ),
-        offset=TiledCameraCfg.OffsetCfg(
+        offset=CameraCfg.OffsetCfg(
             pos=(1.5, 0.0, 1.0), rot=(0.474, 0.0, 0.881, 0.0), convention="opengl"
         ),
     )
@@ -118,7 +118,7 @@ class HeadCameraCfg:
 ################################################################################
 @configclass
 class EgocentricWideAngleCameraCfg:
-    egocentric_wide_angle_camera = TiledCameraCfg(
+    egocentric_wide_angle_camera = CameraCfg(
         prim_path="{ENV_REGEX_NS}/egocentric_wide_angle_camera",
         height=720,
         width=1280,
@@ -129,7 +129,7 @@ class EgocentricWideAngleCameraCfg:
             horizontal_aperture=5.376,
             vertical_aperture=3.024,
         ),
-        offset=TiledCameraCfg.OffsetCfg(
+        offset=CameraCfg.OffsetCfg(
             pos=(0.15, 0.0, 0.5), rot=(0.271, -0.271, -0.653, 0.653), convention="opengl"
         ),
     )
@@ -141,7 +141,7 @@ class EgocentricWideAngleCameraCfg:
 ################################################################################
 @configclass
 class EgocentricMirroredWideAngleHighCameraCfg:
-   egocentric_mirrored_wide_angle_high_camera = TiledCameraCfg(
+   egocentric_mirrored_wide_angle_high_camera = CameraCfg(
         prim_path="{ENV_REGEX_NS}/egocentric_mirrored_wide_angle_high_camera",
         height=720,
         width=1280,
@@ -152,14 +152,14 @@ class EgocentricMirroredWideAngleHighCameraCfg:
             horizontal_aperture=5.376,
             vertical_aperture=3.024,
         ),
-        offset=TiledCameraCfg.OffsetCfg(
+        offset=CameraCfg.OffsetCfg(
             pos=(0.9, 0, 1), rot=(0.271, 0.271, 0.653, 0.653), convention="opengl"
         ),
     )
 
 @configclass
 class EgocentricMirroredWideAngleCameraCfg:
-   egocentric_mirrored_wide_angle_camera = TiledCameraCfg(
+   egocentric_mirrored_wide_angle_camera = CameraCfg(
         prim_path="{ENV_REGEX_NS}/egocentric_mirrored_wide_angle_camera",
         height=720,
         width=1280,
@@ -170,14 +170,14 @@ class EgocentricMirroredWideAngleCameraCfg:
             horizontal_aperture=5.376,
             vertical_aperture=3.024,
         ),
-        offset=TiledCameraCfg.OffsetCfg(
+        offset=CameraCfg.OffsetCfg(
             pos=(0.9, 0, 0.5), rot=(0.271, 0.271, 0.653, 0.653), convention="opengl"
         ),
     )
 
 @configclass
 class EgocentricMirroredCameraCfg:
-   egocentric_mirrored_camera = TiledCameraCfg(
+   egocentric_mirrored_camera = CameraCfg(
     prim_path="{ENV_REGEX_NS}/egocentric_mirrored_camera",
     # height=720,
     # width=1280,
@@ -190,7 +190,7 @@ class EgocentricMirroredCameraCfg:
         horizontal_aperture=20.955,
         vertical_aperture=15.29,
     ),
-    offset=TiledCameraCfg.OffsetCfg(
+    offset=CameraCfg.OffsetCfg(
         pos=(1.5, 0.0, 1.0),
         rot=(0.271, 0.271, 0.653, 0.653),
         convention="opengl"
