@@ -12,7 +12,9 @@ SOURCE_DIR = os.path.dirname(os.path.abspath(__file__)) # robolab/robolab
 
 # Get children of package directory
 DEFAULT_OUTPUT_DIR = os.path.join(PACKAGE_DIR, "output")
-ASSET_DIR = os.path.join(PACKAGE_DIR, "assets")
+# $ROBOLAB_ASSET_DIR: the assets somewhere else, e.g. a shared copy on a cluster, so that clones
+# made without Git LFS (jobs' code checkpoints) don't need their own.
+ASSET_DIR = os.environ.get("ROBOLAB_ASSET_DIR") or os.path.join(PACKAGE_DIR, "assets")
 BACKGROUND_ASSET_DIR = os.path.join(ASSET_DIR, "backgrounds")
 OBJECT_DIR = os.path.join(ASSET_DIR, "objects")
 FIXTURE_DIR = os.path.join(ASSET_DIR, "fixtures")
