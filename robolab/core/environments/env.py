@@ -14,6 +14,7 @@ import logging
 
 import torch
 from isaaclab.envs import ManagerBasedRLEnv
+from torch import Tensor
 
 from robolab.core.logging.recorder_manager import RobolabRecorderManager
 from robolab.core.world.world_state import get_world
@@ -38,6 +39,9 @@ class RobolabEnv(ManagerBasedRLEnv):
         self._env_results: dict[int, bool] = {}      # env_id -> True (success) / False (truncated)
         self._env_term_step: dict[int, int] = {}      # env_id -> episode step when terminated
         self._has_stepped = False                     # tracks whether step() has been called
+        self._resetting_rows = False
+        self.reset_early_terminations = True
+        self.zero_frozen_actions = True
 
     def load_managers(self):
         """Load managers; replace upstream RecorderManager with the streaming-
@@ -63,11 +67,11 @@ class RobolabEnv(ManagerBasedRLEnv):
         self.recorder_manager = RobolabRecorderManager(self.cfg.recorders, self)
 
     def step(self, action):
-        """Step the environment. Zero out actions for frozen (terminated) envs."""
+        """Step the environment, optionally zeroing actions for frozen rows."""
         self._has_stepped = True
         # Snapshot frozen state before step so recorder can detect newly-frozen envs
         self._pre_step_frozen = self._frozen_envs.clone()
-        if self._frozen_envs.any():
+        if self.zero_frozen_actions and self._frozen_envs.any():
             action = action.clone()
             action[self._frozen_envs] = 0.0
         return super().step(action)
@@ -75,15 +79,14 @@ class RobolabEnv(ManagerBasedRLEnv):
     def _reset_idx(self, env_ids):
         """Override to freeze terminated envs instead of resetting them.
 
-        On initial reset (before any stepping), all envs are reset normally.
+        Initial and explicit row resets run the standard reset sequence.
         During stepping, when an env terminates:
         1. Mark it as frozen
         2. Record success/failure and termination step
         3. Export its recording data
         4. Skip the actual reset (env holds its final state)
         """
-        if not self._has_stepped:
-            # Initial reset — let all envs reset normally
+        if not self._has_stepped or self._resetting_rows:
             super()._reset_idx(env_ids)
             get_world(self).reset_predicate_state(env_ids)
             return
@@ -92,7 +95,7 @@ class RobolabEnv(ManagerBasedRLEnv):
         for eid in env_ids.tolist():
             if not self._frozen_envs[eid]:
                 ep_len = int(self.episode_length_buf[eid].item())
-                if ep_len <= 2:
+                if self.reset_early_terminations and ep_len <= 2:
                     # Physics artifact: terminated before the robot could act.
                     # Reset this env normally so it gets a clean start.
                     artifact_ids = torch.tensor([eid], device=self.device, dtype=env_ids.dtype)
@@ -118,6 +121,20 @@ class RobolabEnv(ManagerBasedRLEnv):
         if len(active_ids) > 0:
             super()._reset_idx(active_ids)
             get_world(self).reset_predicate_state(active_ids)
+
+    def reset_rows(self, env_ids: Tensor):
+        """Start new episodes in the selected rows, including frozen rows."""
+        self._resetting_rows = True
+        try:
+            result = super().reset(env_ids=env_ids)
+        finally:
+            self._resetting_rows = False
+        self._frozen_envs[env_ids] = False
+        self._pre_step_frozen[env_ids] = False
+        for eid in env_ids.tolist():
+            self._env_results.pop(eid, None)
+            self._env_term_step.pop(eid, None)
+        return result
 
     @property
     def all_terminated(self) -> bool:
