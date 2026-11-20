@@ -6,17 +6,14 @@ name = "robolab"
 version = "0.3.3"
 description = "A benchmark for simulation"
 readme = "README.md"
-requires-python = ">=3.11,<3.13"
+# This branch targets IsaacLab 3.0 / IsaacSim 6.2 only, which only support Python 3.12.
+requires-python = "==3.12.*"
 license = {text = "Apache-2.0"}
 authors = [{name = "Xuning Yang"}]
 dependencies = [
     # Core
-    # IsaacLab + IsaacSim are NOT pinned here: they are mutually-exclusive,
-    # version-specific stacks selected via the `isaac50` / `isaac51` / `isaac60` extras
-    # below (see [tool.uv].conflicts). Install with e.g.
-    #   uv sync --extra isaac50   # IsaacLab 2.2.0 / IsaacSim 5.0.0
-    #   uv sync --extra isaac51   # IsaacLab 2.3.2.post1 / IsaacSim 5.1.0
-    #   uv sync --extra isaac60   # IsaacLab 3.0 beta / IsaacSim 6.0.1 (Python 3.12)
+    # Isaac Lab 3.0 and Isaac Sim 6.2 come from the `isaac62` extra:
+    #   uv sync --extra isaac62   # IsaacLab 3.0.0 / IsaacSim 6.2.0
     "torch",
     "numpy",
     "gymnasium",
@@ -32,6 +29,8 @@ dependencies = [
     "opencv-python",
     "Pillow",
     "imageio",
+    # mp4 writing backend for imageio; it used to come in through IsaacLab 2.x (moviepy).
+    "imageio-ffmpeg",
     # Scientific computing
     "scipy",
     "matplotlib",
@@ -52,21 +51,9 @@ dependencies = [
 ]
 
 [project.optional-dependencies]
-# Mutually-exclusive IsaacLab/IsaacSim stacks. Exactly one must be selected at
-# install time; they are declared as conflicting under [tool.uv].
-isaac50 = [
-    "isaaclab==2.2.0",
-    "isaacsim[all,extscache]==5.0.0",
-]
-isaac51 = [
-    "isaaclab==2.3.2.post1",
-    "isaacsim[all,extscache]==5.1.0",
-]
-isaac60 = [
-    # Isaac Lab 3's published wheel bundles isaaclab_physx, isaaclab_tasks,
-    # isaaclab_visualizers, and the other Lab extensions. Its `isaacsim` extra
-    # selects the matching Isaac Sim 6.0.1 package stack.
-    "isaaclab[isaacsim]==3.0.0b2.post1; python_version >= '3.12'",
+isaac62 = [
+    "isaaclab[isaacsim]==3.0.0",
+    "isaacsim[all,extscache]==6.2.0",
 ]
 analysis = ["sbi"]
 # httpx: not used directly, but starlette.testclient.TestClient (used by the
@@ -95,15 +82,22 @@ dashboard = ["templates/*.html", "static/*"]
 [tool.uv]
 prerelease = "allow"
 index-strategy = "unsafe-best-match"
-# The IsaacLab/IsaacSim stacks cannot be co-installed in one environment.
-conflicts = [
-    [{ extra = "isaac50" }, { extra = "isaac51" }],
-    [{ extra = "isaac50" }, { extra = "isaac60" }],
-    [{ extra = "isaac51" }, { extra = "isaac60" }],
+# IsaacLab 3.0's own overrides of IsaacSim 6.2's older exact pins (copied from IsaacLab
+# v3.0.0's pyproject.toml). Overrides replace a package's requirements for every requester.
+override-dependencies = [
+    "numpy>=2",
+    "mujoco~=3.12.0",
+    "mujoco-warp~=3.12.0",
+    "newton[sim]==1.6.1",
+    "newton-usd-schemas>=0.5.0",
+    "usd-exchange==3.0.1",
+    "usd-optimize~=1.3.1",
+    "torch==2.11.0",
+    "torchvision==0.26.0",
+    "fsspec>=2026.6.0",
+    "packaging>=20,<27",
+    "urllib3>=2.8.0",
 ]
-# Isaac Sim 5 needs the existing policy-client websockets override.
-# Keep the Isaac Sim 6 / Python 3.12 dependency stack independent.
-override-dependencies = ["websockets>=14.0; python_version < '3.12'"]
 # warp-lang 1.13.0.dev20260418 on pypi.nvidia.com only published the macOS
 # wheel — no Linux build — so any resolver pass that picked it would break
 # `uv sync` on Linux. Exclude that specific version.
@@ -117,23 +111,33 @@ constraint-dependencies = ["warp-lang != 1.13.0.dev20260418"]
 flatdict = ["setuptools<81", "wheel"]
 
 [[tool.uv.index]]
-name = "pytorch-cu128"
-url = "https://download.pytorch.org/whl/cu128"
+name = "pytorch-cu130"
+url = "https://download.pytorch.org/whl/cu130"
 explicit = true
 
 [[tool.uv.index]]
 name = "nvidia"
 url = "https://pypi.nvidia.com"
 
+[[tool.uv.index]]
+name = "pypi-public"
+url = "https://pypi.org/simple"
+explicit = true
+
 [tool.uv.sources]
-torch = { index = "pytorch-cu128" }
-torchvision = { index = "pytorch-cu128" }
+torch = { index = "pytorch-cu130" }
+torchvision = { index = "pytorch-cu130" }
+# As in IsaacLab 3.0: these come from PyPI rather than pypi.nvidia.com.
+omniverseclient = { index = "pypi-public" }
+ovphysx = { index = "pypi-public" }
+ovrtx = { index = "pypi-public" }
+ovstage = { index = "pypi-public" }
 
 [tool.pytest.ini_options]
 testpaths = ["tests", "dashboard/tests"]
 
 [tool.ruff]
-target-version = "py311"
+target-version = "py312"
 line-length = 120
 
 [tool.ruff.lint]
@@ -141,4 +145,4 @@ select = ["I"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["robolab", "policies"]
-known-third-party = ["isaaclab", "isaaclab_assets", "isaaclab_mimic", "isaaclab_physx", "isaaclab_rl", "isaaclab_tasks", "isaaclab_visualizers"]
+known-third-party = ["isaaclab", "isaaclab_assets", "isaaclab_mimic", "isaaclab_rl", "isaaclab_tasks"]

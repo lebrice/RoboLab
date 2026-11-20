@@ -35,32 +35,19 @@ See the [Ecosystem](docs/ecosystem.md) page for projects built on RoboLab.
 
 ## Getting Started
 
-Requires [uv](https://docs.astral.sh/uv/getting-started/installation/) and a system `ffmpeg` (used for video recording). The Isaac Sim/Isaac Lab stack is selected with a mutually-exclusive extra: `isaac50` (the default), `isaac51`, or `isaac60`. See [Isaac Sim 6 support](docs/isaac_sim_6.md) and [Requirements](#requirements).
+This branch uses Python 3.12, Isaac Lab 3.0, and Isaac Sim 6.2. Install [uv](https://docs.astral.sh/uv/getting-started/installation/) to set up the environment.
 
 ### Installation
 
 ```bash
-sudo apt install ffmpeg
 git clone <repo_url>
 cd robolab
-uv venv --python 3.11
-source .venv/bin/activate
-uv sync --extra isaac50          # Isaac Sim 5.0 / Isaac Lab 2.2.0 (default)
-# uv sync --extra isaac51        # Isaac Sim 5.1 / Isaac Lab 2.3.2.post1 (Python 3.11)
-# uv sync --python 3.12 --extra isaac60  # Isaac Sim 6.0.1 / Isaac Lab 3.0 beta
-```
-
-The stacks cannot coexist in one environment. To keep multiple versions available, install each into its own venv:
-
-```bash
-UV_PROJECT_ENVIRONMENT=.venv-50 uv sync --python 3.11 --extra isaac50
-UV_PROJECT_ENVIRONMENT=.venv-51 uv sync --python 3.11 --extra isaac51
-UV_PROJECT_ENVIRONMENT=.venv-60 uv sync --python 3.12 --extra isaac60
+uv sync --extra isaac62
 ```
 
 Verify installation:
 ```bash
-uv run pytest tests/
+uv run --extra isaac62 pytest tests/
 ```
 
 This runs the install-verification suite end-to-end: isaaclab importable, all task definitions valid, env factory populated, one full episode runs. The suite auto-accepts the NVIDIA Omniverse EULA so the run is fully headless with no prompts. More details at [Debugging → Diagnostic Scripts](docs/debug.md#diagnostic-scripts).

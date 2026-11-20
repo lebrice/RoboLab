@@ -40,6 +40,7 @@ def _apply_render_settings(env_cfg: ManagerBasedEnvCfg, renderer: str, rendering
     Must be called before the simulation context is created (i.e. before
     ``gym.make``/``RobolabEnv``), since :class:`isaaclab.sim.RenderCfg` is read
     when the RTX renderer is configured.
+    Isaac Lab 3.0 final uses each camera's renderer configuration instead.
 
     Args:
         env_cfg: The environment config whose ``sim.render`` (a ``RenderCfg``) is mutated.
@@ -51,6 +52,13 @@ def _apply_render_settings(env_cfg: ManagerBasedEnvCfg, renderer: str, rendering
     """
     if renderer not in _RENDERER_TO_RTX_MODE:
         raise ValueError(f"Unknown renderer '{renderer}'; expected one of {list(_RENDERER_TO_RTX_MODE)}.")
+
+    if not hasattr(env_cfg.sim, "render"):
+        if renderer != "realtime" or rendering_mode is not None:
+            raise NotImplementedError(
+                "Isaac Lab 3.0 camera rendering currently supports the default realtime mode."
+            )
+        return
 
     if rendering_mode is not None:
         env_cfg.sim.render.rendering_mode = rendering_mode
