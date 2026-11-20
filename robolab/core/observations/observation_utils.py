@@ -15,21 +15,32 @@ from isaaclab.utils import configclass
 from robolab.core.utils.isaaclab_compat import as_torch, quat_isaaclab_to_wxyz
 
 
-def _image_observation_func():
-    """Resolve the IsaacLab image observation function across versions.
+def camera_image(
+    env: Any,
+    sensor_cfg: SceneEntityCfg = SceneEntityCfg("over_shoulder_left_camera"),
+    data_type: str = "rgb",
+    normalize: bool = True,
+) -> torch.Tensor:
+    """Read a batched camera image using the Isaac Lab 3.0 sensor API."""
+    images = as_torch(env.scene.sensors[sensor_cfg.name].data.output[data_type])
+    if data_type == "rgb":
+        images = images[..., :3]
+        if normalize:
+            images = images.float() / 255.0
+            images = images - images.mean(dim=(1, 2), keepdim=True)
+    elif normalize and ("distance_to" in data_type or "depth" in data_type):
+        images = images.clone()
+        images[images == float("inf")] = 0
+    return images.clone()
 
-    IsaacLab 2.2 (IsaacSim 5.0) exposes it as ``mdp.observations.image``;
-    IsaacLab 2.3 (IsaacSim 5.1) also exposes it directly as ``mdp.image``.
-    Prefer the direct attribute, then fall back to the nested module.
-    """
+
+def _image_observation_func():
+    """Resolve the legacy function or read the camera sensor directly."""
     image_func = getattr(mdp, "image", None)
     if image_func is not None:
         return image_func
     observations = getattr(mdp, "observations", None)
-    image_func = getattr(observations, "image", None) if observations is not None else None
-    if image_func is None:
-        raise AttributeError("IsaacLab image observation function not found")
-    return image_func
+    return getattr(observations, "image", camera_image)
 
 
 def image_safe(
